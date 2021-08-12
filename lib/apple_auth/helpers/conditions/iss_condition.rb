@@ -9,7 +9,7 @@ module AppleAuth
         @iss = jwt['iss']
       end
 
-      def validate!
+      def validate!(config: nil)
         return true if @iss.include?(APPLE_ISS)
 
         raise JWTValidationError, 'jwt_iss is different to apple_iss'

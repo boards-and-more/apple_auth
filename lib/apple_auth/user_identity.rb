@@ -6,15 +6,16 @@ module AppleAuth
 
     attr_reader :user_identity, :jwt
 
-    def initialize(user_identity, jwt)
+    def initialize(user_identity, jwt, config: nil)
       @user_identity = user_identity
       @jwt = jwt
+      @config = config
     end
 
     def validate!
       token_data = decoded_jwt
 
-      JWTConditions.new(user_identity, token_data).validate!
+      JWTConditions.new(user_identity, token_data, config: @config).validate!
 
       token_data.symbolize_keys
     end

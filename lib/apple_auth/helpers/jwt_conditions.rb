@@ -13,9 +13,10 @@ module AppleAuth
 
     attr_reader :user_identity, :decoded_jwt
 
-    def initialize(user_identity, decoded_jwt)
+    def initialize(user_identity, decoded_jwt, config: nil)
       @user_identity = user_identity
       @decoded_jwt = decoded_jwt
+      @config = config
     end
 
     def validate!
@@ -34,7 +35,7 @@ module AppleAuth
 
     def jwt_conditions_validate!
       conditions_results = CONDITIONS.map do |condition|
-        condition.new(decoded_jwt).validate!
+        condition.new(decoded_jwt).validate!(config: @config)
       end
       conditions_results.all? { |value| value == true }
     end

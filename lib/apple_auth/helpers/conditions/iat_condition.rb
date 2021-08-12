@@ -7,7 +7,7 @@ module AppleAuth
         @iat = jwt['iat'].to_i
       end
 
-      def validate!
+      def validate!(config: nil)
         return true if @iat <= Time.now.to_i
 
         raise JWTValidationError, 'jwt_iat is greater than now'

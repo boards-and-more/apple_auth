@@ -7,7 +7,7 @@ module AppleAuth
         @exp = jwt['exp'].to_i
       end
 
-      def validate!
+      def validate!(config: nil)
         return true if @exp > Time.now.to_i
 
         raise JWTValidationError, 'Expired jwt_exp'

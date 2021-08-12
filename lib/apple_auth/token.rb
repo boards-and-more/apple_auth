@@ -3,12 +3,12 @@
 module AppleAuth
   class Token
     APPLE_AUD = 'https://appleid.apple.com'
-    APPLE_CONFIG = AppleAuth.config
     APPLE_CODE_TYPE = 'authorization_code'
     APPLE_ALG = 'ES256'
 
-    def initialize(code)
+    def initialize(code, config: nil)
       @code = code
+      @config = config
     end
 
     # :reek:FeatureEnvy
@@ -25,10 +25,10 @@ module AppleAuth
 
     def apple_token_params
       {
-        client_id: APPLE_CONFIG.apple_team_id,
+        client_id: current_config.apple_team_id,
         client_secret: client_secret_from_jwt,
         grant_type: APPLE_CODE_TYPE,
-        redirect_uri: APPLE_CONFIG.redirect_uri,
+        redirect_uri: current_config.redirect_uri,
         code: code
       }
     end
@@ -40,18 +40,18 @@ module AppleAuth
     def claims
       time_now = Time.now.to_i
       {
-        iss: APPLE_CONFIG.apple_team_id,
+        iss: current_config.apple_team_id,
         iat: time_now,
         exp: time_now + 10.minutes.to_i,
         aud: APPLE_AUD,
-        sub: APPLE_CONFIG.apple_client_id
+        sub: current_config.apple_client_id
       }
     end
 
     def claims_headers
       {
         alg: APPLE_ALG,
-        kid: AppleAuth.config.apple_key_id
+        kid: current_config.apple_key_id
       }
     end
 
@@ -62,7 +62,7 @@ module AppleAuth
     end
 
     def gen_private_key
-      key = AppleAuth.config.apple_private_key
+      key = current_config.apple_private_key
       key = OpenSSL::PKey::EC.new(key) unless key.class == OpenSSL::PKey::EC
       key
     end
@@ -89,10 +89,21 @@ module AppleAuth
     end
 
     def apple_access_token
-      client = ::OAuth2::Client.new(APPLE_CONFIG.apple_client_id,
+      client = ::OAuth2::Client.new(current_config.apple_client_id,
                                     client_secret_from_jwt,
                                     client_urls)
-      client.auth_code.get_token(code, { redirect_uri: APPLE_CONFIG.redirect_uri }, {})
+      client.auth_code.get_token(code, { redirect_uri: current_config.redirect_uri }, {})
+    end
+
+    
+    private
+
+    def current_config
+      if @config.present?
+        return @config
+      end
+
+      AppleAuth.config
     end
   end
 end
